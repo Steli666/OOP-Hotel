@@ -21,7 +21,15 @@ public class Room
         return room;
     }
     public void setRoom(int room) {
-        this.room = room;
+
+        if(room > 0)
+        {
+            this.room = room;
+        }
+        else
+        {
+            System.out.println("Invalid room number");
+        }
     }
 
     public String getNote() {
@@ -70,4 +78,3 @@ public class Room
         setAvailability(true);
     }
 }
-

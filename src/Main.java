@@ -1,17 +1,19 @@
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import java.time.LocalDate;
+import java.util.ArrayList;
+
+
 public class Main {
     public static void main(String[] args) {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
-
-        // Press Shift+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
-
-            // Press Shift+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
-        }
+        ArrayList<Room> rooms = new ArrayList<Room>();
+        Room room1 = new Room(231, "No room service", 4, 5, LocalDate.of(2020, 2, 2), LocalDate.of(2020, 2, 5));
+        Room room2 = new Room(102, "Ocean view", 2, 1, LocalDate.of(2020, 3, 10), LocalDate.of(2020, 3, 15));
+        Room room3 = new Room(311, "Pet-friendly", 3, 2, LocalDate.of(2020, 4, 20), LocalDate.of(2020, 4, 25));
+        Room room4 = new Room(420, "Executive suite", 2, 1, LocalDate.of(2020, 5, 12), LocalDate.of(2020, 5, 17));
+        Room room5 = new Room(501, "Accessible for disabled guests", 1, 1, LocalDate.of(2020, 6, 8), LocalDate.of(2020, 6, 12));
+        rooms.add(room1);
+        rooms.add(room2);
+        rooms.add(room3);
+        rooms.add(room4);
+        rooms.add(room5);
     }
 }
