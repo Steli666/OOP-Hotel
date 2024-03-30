@@ -67,14 +67,14 @@ public class Room
         this.to = to;
     }
 
-    Room(int room, String note, int guests, int beds, LocalDate from, LocalDate to)
+    Room(int room, String note, int guests, int beds)
     {
         setRoom(room);
         setNote(note);
         setGuests(guests);
         setBeds(beds);
-        setFrom(from);
-        setTo(to);
+//        setFrom(from);
+//        setTo(to);
         setAvailability(true);
     }
 }
