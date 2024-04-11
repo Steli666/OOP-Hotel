@@ -1,4 +1,5 @@
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 public class Room
 {
@@ -9,6 +10,15 @@ public class Room
     private LocalDate from; //first date yyyy-MM-dd
     private LocalDate to; //final date
     private boolean availability;
+    private ArrayList<ArrayList<Dates>> listOfLists;
+
+    public void setListOfLists(ArrayList<ArrayList<Dates>> listOfLists) {
+
+        this.listOfLists = listOfLists;
+    }
+    public ArrayList<ArrayList<Dates>> getListOfLists() {
+        return this.listOfLists;
+    }
 
     public boolean isAvailability() {
         return availability;
