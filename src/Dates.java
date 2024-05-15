@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class Dates
+public class Dates implements Serializable
 {
         private LocalDate dateFrom;
         private LocalDate dateTo;

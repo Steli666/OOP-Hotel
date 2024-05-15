@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class Room
+public class Room implements Serializable
 {
     private int room; //room number
     private String note;
@@ -38,7 +39,7 @@ public class Room
         }
         else
         {
-            System.out.println("Invalid room number");
+            System.out.println("Invalid room number (there can't be a room with a negative number)");
         }
     }
 
