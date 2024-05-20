@@ -16,16 +16,22 @@ public class Operations
         filename = null;
         fileOpened = false;
         rooms = new ArrayList<>();
-        Room room1 = new Room(231, "No room service", 0, 5);
-        Room room2 = new Room(102, "Ocean view", 0, 1);
-        Room room3 = new Room(311, "Pet-friendly", 0, 3);
-        Room room4 = new Room(420, "Executive suite", 0, 2);
-        Room room5 = new Room(501, "Accessible for disabled guests", 0, 4);
-        rooms.add(room1);
-        rooms.add(room2);
-        rooms.add(room3);
-        rooms.add(room4);
-        rooms.add(room5);
+//        Room room1 = new Room(102, "No room service", 0, 1);
+//        Room room2 = new Room(231, "Ocean view", 0, 2);
+//        Room room3 = new Room(311, "Pet-friendly", 0, 3);
+//        Room room4 = new Room(420, "Executive suite", 0, 4);
+//        Room room5 = new Room(501, "Accessible for disabled guests", 0, 5);
+//        rooms.add(room1);
+//        rooms.add(room2);
+//        rooms.add(room3);
+//        rooms.add(room4);
+//        rooms.add(room5);
+//        Hotel.checkin(102,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",1,rooms);
+//        Hotel.checkin(231,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",2,rooms);
+//        Hotel.checkin(311,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",2,rooms);
+//        Hotel.checkin(420,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",3,rooms);
+//        Hotel.checkin(501,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",3,rooms);
+
         reader = new BufferedReader(new InputStreamReader(System.in));
     }
 
@@ -62,21 +68,21 @@ public class Operations
                         break;
                     case "checkin":
                         if(isFileOpened(fileOpened)) {
-                        checkin(words);
+                            checkin(words);
                         } else {
                             System.out.println("You have not opened a file.");
                         }
                         break;
                     case "availability":
                         if(isFileOpened(fileOpened)) {
-                        availability(words);
+                            availability(words);
                         } else {
                             System.out.println("You have not opened a file.");
                         }
                         break;
                     case "checkout":
                         if(isFileOpened(fileOpened)) {
-                        checkout(words);
+                            checkout(words);
                         } else {
                             System.out.println("You have not opened a file.");
                         }
@@ -196,6 +202,7 @@ public class Operations
                 int guests = 0;
                 if (from.isAfter(to)) {
                     System.out.println("Error: Check-in date cannot be after check-out date.");
+                    return;
                 }
                 if (words.length > 5) {
                     guests = Integer.parseInt(words[5]);
@@ -217,12 +224,16 @@ public class Operations
         if (words.length >= 1) {
             try {
                 LocalDate date;
-                if (words.length >= 2 && words[1].equals("")) {
-                    date = LocalDate.parse(words[1]);
-                } else {
+                if (words.length == 1 || words[1].equals("")) {
                     date = LocalDate.now();
+                    Hotel.availability(rooms, date);
+                } else if (words.length == 2){
+                    date = LocalDate.parse(words[1]);
+                    Hotel.availability(rooms, date);
                 }
-                Hotel.availability(rooms, date);
+                else {
+                    System.out.println("You have input too many parameters");
+                }
             } catch (DateTimeParseException e) {
                 System.out.println("Error: Invalid date format.");
             } catch (Exception e) {
