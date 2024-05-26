@@ -9,13 +9,12 @@ public class Operations
 {
     private String filename;
     private boolean fileOpened;
-    private ArrayList<Room> rooms;
     private BufferedReader reader;
-
+    private Hotel hotel;
     public Operations() {
         filename = null;
         fileOpened = false;
-        rooms = new ArrayList<>();
+       ArrayList<Room> rooms = new ArrayList<>();
 //        Room room1 = new Room(102, "No room service", 0, 1);
 //        Room room2 = new Room(231, "Ocean view", 0, 2);
 //        Room room3 = new Room(311, "Pet-friendly", 0, 3);
@@ -26,13 +25,13 @@ public class Operations
 //        rooms.add(room3);
 //        rooms.add(room4);
 //        rooms.add(room5);
-//        Hotel.checkin(102,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",1,rooms);
-//        Hotel.checkin(231,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",2,rooms);
-//        Hotel.checkin(311,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",2,rooms);
-//        Hotel.checkin(420,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",3,rooms);
-//        Hotel.checkin(501,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",3,rooms);
-
-        reader = new BufferedReader(new InputStreamReader(System.in));
+        hotel = new Hotel(rooms);
+//        hotel.checkin(102,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",1);
+//        hotel.checkin(231,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",2);
+//        hotel.checkin(311,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",2);
+//        hotel.checkin(420,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",2);
+//        hotel.checkin(501,LocalDate.of(2024, 1, 1),LocalDate.of(2024, 1, 6),"no",3);
+       reader = new BufferedReader(new InputStreamReader(System.in));
     }
 
     public boolean isFileOpened(boolean fileOpened) {
@@ -128,7 +127,7 @@ public class Operations
     private void openFile(String[] words) {
         if (!fileOpened && words.length == 2) {
             filename = words[1];
-            FileHandler.readFromFile(filename, rooms);
+            FileHandler.readFromFile(filename, hotel.getRooms());
             fileOpened = true;
 
         } else if (fileOpened) {
@@ -140,7 +139,7 @@ public class Operations
 
     private void saveFile() {
         if (fileOpened) {
-            FileHandler.writeToFile(filename, rooms);
+            FileHandler.writeToFile(filename, hotel.getRooms());
         } else {
             System.out.println("No file is currently opened.");
         }
@@ -150,7 +149,7 @@ public class Operations
         if (fileOpened) {
             if (words.length > 1) {
                 String dir = words[1];
-                FileHandler.writeToFile_dir(dir, filename, rooms);
+                FileHandler.writeToFileDir(dir, filename, hotel.getRooms());
                 System.out.println("Successfully saved " + filename + " in " + dir);
             } else {
                 System.out.println("Specify the directory where you want to save the file.");
@@ -165,7 +164,7 @@ public class Operations
             FileHandler.closeFile(filename);
             fileOpened = false;
             filename = null;
-            rooms.clear();
+            hotel.clearRooms();
         } else {
             System.out.println("No file is currently opened.");
         }
@@ -207,7 +206,7 @@ public class Operations
                 if (words.length > 5) {
                     guests = Integer.parseInt(words[5]);
                 }
-                Hotel.checkin(roomNumber, from, to, note, guests, rooms);
+                hotel.checkin(roomNumber, from, to, note, guests);
             } catch (NumberFormatException e) {
                 System.out.println("Error: Invalid number format.");
             } catch (DateTimeParseException e) {
@@ -226,10 +225,10 @@ public class Operations
                 LocalDate date;
                 if (words.length == 1 || words[1].equals("")) {
                     date = LocalDate.now();
-                    Hotel.availability(rooms, date);
+                    hotel.availability(date);
                 } else if (words.length == 2){
                     date = LocalDate.parse(words[1]);
-                    Hotel.availability(rooms, date);
+                    hotel.availability(date);
                 }
                 else {
                     System.out.println("You have input too many parameters");
@@ -246,11 +245,11 @@ public class Operations
         if (words.length == 2) {
             try {
                 int room = Integer.parseInt(words[1]);
-                Hotel.checkout(room, rooms);
+                hotel.checkout(room);
             } catch (Exception e) {
                 System.out.println("Error: " + e.getMessage());
             }
-        }else {
+        } else {
             System.out.println("Error: Incorrect number of parameters.");
         }
     }
@@ -264,7 +263,7 @@ public class Operations
                     System.out.println("Error: Check-in date cannot be after check-out date.");
                 }
                 else {
-                    Hotel.report(rooms, from, to);
+                    hotel.report(from, to);
                 }
             } catch (DateTimeParseException e) {
                 System.out.println("Error: Invalid date format.");
@@ -285,7 +284,7 @@ public class Operations
                 if (from.isAfter(to)) {
                     System.out.println("Error: Check-in date cannot be after find date.");
                 } else {
-                    Hotel.find(beds, from, to, rooms);
+                    hotel.find(beds, from, to);
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Error: Invalid number format for beds.");
@@ -308,7 +307,7 @@ public class Operations
                 if (from.isAfter(to)) {
                     System.out.println("Error: Check-in date cannot be after find date.");
                 } else {
-                    Hotel.findVip(beds, from, to, rooms);
+                    hotel.findVip(beds, from, to);
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Error: Invalid number format for beds.");
@@ -331,8 +330,8 @@ public class Operations
                 String note = words[4];
                 if (from.isAfter(to)) {
                     System.out.println("Error: Check-in date cannot be after unavailable date.");
-                }
-                Hotel.unavailable(room, from, to, note, rooms);
+                }else{
+                hotel.unavailable(room, from, to, note);}
             } catch (NumberFormatException e) {
                 System.out.println("Error: Invalid number format for room.");
             } catch (DateTimeParseException e) {
@@ -345,8 +344,4 @@ public class Operations
         }
     }
 
-    public static void main(String[] args) {
-        Operations operations = new Operations();
-        operations.start();
-    }
 }

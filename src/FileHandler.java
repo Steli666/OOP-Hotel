@@ -5,14 +5,13 @@ import java.util.HashSet;
 public class FileHandler {
 
     public static void readFromFile(String fileName, ArrayList<Room> rooms) {
-        try {
-            FileInputStream fileInputStream = new FileInputStream(fileName);
-            ObjectInputStream ois = new ObjectInputStream(fileInputStream);
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))) {
+            @SuppressWarnings("unchecked")
             ArrayList<Room> readRooms = (ArrayList<Room>) ois.readObject();
             rooms.addAll(readRooms);
             System.out.println("Data read from the file successfully");
-            ois.close();
-        } catch (IOException | ClassNotFoundException e) {  System.out.println("Error reading from file: " + e.getMessage());
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Error reading from file: " + e.getMessage());
             System.out.println("Creating a new file");
             writeToFile(fileName, new ArrayList<>());
         }
@@ -27,7 +26,7 @@ public class FileHandler {
         }
     }
 
-    public static void writeToFile_dir(String directory, String fileName, ArrayList<Room> rooms) {
+    public static void writeToFileDir(String directory, String fileName, ArrayList<Room> rooms) {
         File file = new File(directory, fileName);
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             oos.writeObject(rooms);

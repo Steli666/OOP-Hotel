@@ -1,5 +1,4 @@
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.sql.ClientInfoStatus;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.time.LocalDate;
@@ -9,22 +8,42 @@ import java.util.Scanner;
 
 public class Hotel {
 
-    public static boolean availability(LocalDate from, LocalDate to, ArrayList<Room> rooms) {
-        boolean availability = true;
+
+    private ArrayList<Room> rooms;
+
+    public Hotel(ArrayList<Room> rooms) {
+        this.rooms = rooms;
+    }
+
+    public ArrayList<Room> getRooms() {
+        return rooms;
+    }
+
+    public void clearRooms() {
+        rooms.clear();
+    }
+
+    public  boolean availability(LocalDate from, LocalDate to) {
+        int br = 0;
         for (Room room : rooms) {
-            ArrayList<Reservations> listOfreservations = room.getListOfLists();
-            if (listOfreservations != null && !listOfreservations.isEmpty()) {
-                for (Reservations reservations : listOfreservations) {
+            ArrayList<Reservations> listOfReservations = room.getListOfLists();
+            if (listOfReservations != null && !listOfReservations.isEmpty()) {
+                for (Reservations reservations : listOfReservations) {
                     if (from.isBefore(reservations.getDate2()) && to.isAfter(reservations.getDate1())) {
-                        availability = false;
+                        br++;
+                        break;
                     }
                 }
             }
         }
-        return availability;
+        if (br == rooms.size()) {
+            return false;
+        }else {
+            return true;
+        }
     }
 
-    public static boolean availabilityForRoom(LocalDate from, LocalDate to, ArrayList<Room> rooms, Room room1) {
+    public  boolean availabilityForRoom(LocalDate from, LocalDate to, Room room1) {
         boolean availability = true;
         for (Room room : rooms) {
             if(room.getRoom() == room1.getRoom()) {
@@ -41,27 +60,29 @@ public class Hotel {
         return availability;
     }
 
-    public static void checkin(int roomNumber, LocalDate from, LocalDate to, String note, int guests, ArrayList<Room> rooms) {
-        LocalDate today = LocalDate.now();
+    public static void noOverlap(Room room, String note, LocalDate from, LocalDate to, int roomNumber,int guests){
+        ArrayList<Reservations> listDates = room.getListOfLists();
+        int reservationId = room.getNextReservationId();
+        listDates.add(new Reservations(reservationId,from, to,guests,note));
+        room.setListOfLists(listDates);
+        System.out.println("The id of the reservation: " + room.getListOfLists().get(room.getListOfLists().size() - 1).getId());
+        System.out.println("You have checked in room " + roomNumber);
+    }
 
-        if (from.isAfter(today) || to.isAfter(today)) {
-            System.out.println("Cannot check in with dates in the future.");
-            return;
-        }
+    public void checkin(int roomNumber, LocalDate from, LocalDate to, String note, int guests) {
+
         boolean roomFound = false;
 
         for (Room room : rooms) {
             if (room.getRoom() == roomNumber) {
                 roomFound = true;
-                if (availabilityForRoom(from, to, rooms, room)) {
+                if (availabilityForRoom(from, to, room)) {
                     if (guests == 0) {
-                        room.setGuests(room.getBeds());
+                        guests = room.getBeds();
                     } else {
                         if (guests > room.getBeds()) {
                             System.out.println("You can't check in more guests than there are beds");
                             return;
-                        } else {
-                            room.setGuests(guests);
                         }
                     }
                     boolean overlap = false;
@@ -70,8 +91,9 @@ public class Hotel {
                             if (!(to.isBefore(reservations.getDate1()) || from.isAfter(reservations.getDate2()))) {
                                 overlap = true;
                                 break;
-                            } else if (from.isBefore(reservations.getDate1())) {
-                                System.out.println("You cannot checkin before another reservation.");
+
+                            } else if (from.isBefore(room.getListOfLists().get(0).getDate1())) {
+                                System.out.println("You cannot checkin before the first reservation.");
                                 return;
                             }
                         }
@@ -82,15 +104,7 @@ public class Hotel {
                     }
 
                     if (!overlap) {
-                        room.setFrom(from);
-                        room.setTo(to);
-                        room.setNote(note);
-
-                        ArrayList<Reservations> listDates = room.getListOfLists();
-                        listDates.add(new Reservations(from, to));
-                        room.setListOfLists(listDates);
-
-                        System.out.println("You have checked in room " + roomNumber);
+                        noOverlap(room, note, from, to, roomNumber,guests);
                     }
                 } else {
                     System.out.println("Cannot check in. Room " + roomNumber + " is already booked for this period.");
@@ -115,7 +129,7 @@ public class Hotel {
         return true;
     }
 
-    public static void availability(ArrayList<Room> rooms, LocalDate date) {
+    public void availability(LocalDate date) {
         boolean availableRooms = false;
         System.out.println("Available rooms: ");
         for (Room room : rooms) {
@@ -129,17 +143,11 @@ public class Hotel {
         }
     }
 
-    public static void report(ArrayList<Room> rooms, LocalDate from, LocalDate to) {
-        ArrayList<Room> listOfRooms = new ArrayList<>();
-        ArrayList<Reservations> matchedDates = new ArrayList<>();
-        //проверява дали датите на стаята са в периода подаден от потребителя
-        //ако едната дата съвпада я вкарвам в арейлиста и ѝ взимам номера
+    public void matchedDatesAndRoomsForReport(ArrayList<Room> listOfRooms,ArrayList<Reservations> matchedDates , LocalDate from, LocalDate to) {
         for (Room room : rooms) {
-            ArrayList<Reservations> listOfreservations = room.getListOfLists();
-            if (listOfreservations != null && !listOfreservations.isEmpty()) {
-                //System.out.println(listOfLists);
-                for (Reservations reservations : listOfreservations) {
-                    //System.out.println("From: " + dates.getDate1() + ", To: " + dates.getDate2());
+            ArrayList<Reservations> listOfReservations = room.getListOfLists();
+            if (listOfReservations != null && !listOfReservations.isEmpty()) {
+                for (Reservations reservations : listOfReservations) {
                     if (from.compareTo(reservations.getDate1()) >= 0 && to.compareTo(reservations.getDate2()) <= 0) {
                         matchedDates.add(reservations);
                         listOfRooms.add(room);
@@ -147,6 +155,12 @@ public class Hotel {
                 }
             }
         }
+    }
+
+    public void report(LocalDate from, LocalDate to) {
+        ArrayList<Room> listOfRooms = new ArrayList<>();
+        ArrayList<Reservations> matchedDates = new ArrayList<>();
+        matchedDatesAndRoomsForReport(listOfRooms, matchedDates, from, to);
         for (int i = 0; i < listOfRooms.size(); i++) {
             int numberOfDays = (int) ChronoUnit.DAYS.between(matchedDates.get(i).getDate1(), matchedDates.get(i).getDate2());
             System.out.println("Room number: " + listOfRooms.get(i).getRoom() + ", Dates: " + matchedDates.get(i).getDate1() + " " + matchedDates.get(i).getDate2() + ", Number of days: " + numberOfDays);
@@ -154,34 +168,30 @@ public class Hotel {
         if (listOfRooms.isEmpty()) {
             System.out.println("There is no room that meets the requirement");
         }
-        //for с индекси
-        //1ви индекс на едното съвпада с 1ви на другия
 
     }
 
-    private static boolean isRoomAvailableForDates(Room room, LocalDate from, LocalDate to) {
-        ArrayList<Reservations> listOfLists = room.getListOfLists();
-        if (listOfLists == null) {
-            return true; // Treat as available if there are no booked dates
+    public static boolean isRoomAvailableForDates(Room room, LocalDate from, LocalDate to) {
+        ArrayList<Reservations> listOfReservations = room.getListOfLists();
+        if (listOfReservations == null) {
+            return true;
         }
 
-        if (!listOfLists.isEmpty()) {
-            for (Reservations reservations : listOfLists
-            ) {
+        if (!listOfReservations.isEmpty()) {
+            for (Reservations reservations : listOfReservations) {
                 LocalDate date1 = reservations.getDate1();
                 LocalDate date2 = reservations.getDate2();
-                // Check if there's any overlap between the date range and the room's booked dates
+
                 if ((from.isBefore(date2) || from.isEqual(date2)) && (to.isAfter(date1) || to.isEqual(date1))) {
-                    return false; // Room is booked for at least part of the requested period
+                    return false;
                 }
             }
 
         }
-        return true; // Room is available for the entire requested period
+        return true;
     }
 
-    public static void find(int beds, LocalDate from, LocalDate to, ArrayList<Room> rooms) {
-        //сортирам стаите по легла тука преди фор-а
+    public  void find(int beds, LocalDate from, LocalDate to) {
 
         Collections.sort(rooms, new Comparator<Room>() {
             @Override
@@ -193,14 +203,10 @@ public class Hotel {
         System.out.println("Available rooms: ");
         boolean bedsFound = false;
         for (Room room : rooms) {
-
             if (isRoomAvailableForDates(room, from, to) && room.getBeds() >= beds) {
-
-                if (room.getBeds() >= beds) {
                     System.out.println(room.getRoom());
                     bedsFound = true;
                     break;
-                }
             }
         }
         if (!bedsFound) {
@@ -208,9 +214,17 @@ public class Hotel {
         }
     }
 
-    public static void unavailable(int roomNumber, LocalDate from, LocalDate to, String note, ArrayList<Room> rooms) {
-        //трябва да сложа вместо на първата дата на последната за да не се буква преди последната резервация
+    public static boolean setUnavailableRoom(Room room, LocalDate from, LocalDate to, String note, boolean unavailableCheck, int roomNumber) {
+        ArrayList<Reservations> listDates = room.getListOfLists();
+        int reservationId = room.getNextReservationId();
+        listDates.add(new Reservations(reservationId,from, to,room.getBeds(),note));
+        room.setListOfLists(listDates);
+        unavailableCheck = true;
+//        System.out.println("Room " + roomNumber + " will be unavailable from " + from + " to " + to);
+        return unavailableCheck;
+    }
 
+    public  void unavailable(int roomNumber, LocalDate from, LocalDate to, String note) {
         boolean foundRoom = false;
         boolean unavailableCheck = false;
         for (Room room : rooms) {
@@ -218,20 +232,16 @@ public class Hotel {
                 foundRoom = true;
                 if (isRoomAvailableForDates(room, from, to)) {
                     if (room.getListOfLists() != null && !room.getListOfLists().isEmpty()) {
-                        if (from.isBefore(room.getTo())) {
-                            System.out.println("You cannot checkin before another reservation.");
+                        if (from.isBefore(room.getListOfLists().get(0).getDate1())) {
+                            System.out.println("You cannot checkin before the first reservation.");
                             return;
+                        }else{
+                            unavailableCheck = setUnavailableRoom(room, from,to,note,unavailableCheck,roomNumber);
+                            System.out.println("Room " + roomNumber + " will be unavailable from " + from + " to " + to);
                         }
                     }
-                    room.setFrom(from);
-                    room.setTo(to);
-                    room.setNote(note);
-                    ArrayList<Reservations> listDates = room.getListOfLists();
-                    listDates.add(new Reservations(from, to));
-                    room.setListOfLists(listDates);
-                    unavailableCheck = true;
-                    System.out.println("Room " + roomNumber + " will be unavailable from " + room.getFrom() + " to " + room.getTo());
                 }
+
             }
         }
         if (!foundRoom) {
@@ -241,75 +251,139 @@ public class Hotel {
         }
     }
 
-    public static void checkout(int roomNumber, ArrayList<Room> rooms) {
-        Scanner sc = new Scanner(System.in);
-        boolean roomFound = false;
-        for (Room room : rooms) {
-            if (room.getRoom() == roomNumber) {
+    public static boolean daysToCheckout(Room room, int idReservation, boolean falseID, Scanner sc, int roomNumber) {
+        for (Reservations reservation : room.getListOfLists()) {
+            if(reservation.getId() == idReservation) {
+                falseID = true;
                 System.out.println("Type how many days earlier you want to checkout: ");
                 String days = sc.nextLine();
                 int daysCount = Integer.parseInt(days);
                 int numberOfDays = 0;
-                if (room.getFrom() != null && room.getTo() !=null) {
-                    numberOfDays = (int) ChronoUnit.DAYS.between(room.getFrom(), room.getTo());
-                }else{
-                    System.out.println("The room does not have reservations.");
-                    return;
-                }
+                numberOfDays = (int) ChronoUnit.DAYS.between(reservation.getDate1(), reservation.getDate2());
                 if (numberOfDays > daysCount) {
-                    // Modify the end date of the last reservation
-                    ArrayList<Reservations> listOfReservations = room.getListOfLists();
-                    if (listOfReservations != null && !listOfReservations.isEmpty()) {
-                        Reservations lastReservation = listOfReservations.get(listOfReservations.size() - 1);
-                        LocalDate newEndDate = room.getTo().minusDays(daysCount);
-                        lastReservation.setDateTo(newEndDate);
-                        room.setTo(newEndDate);
-                        System.out.println("You have checked out of room " + roomNumber);
-                    }
+                    LocalDate newEndDate = reservation.getDate2().minusDays(daysCount);
+                    reservation.setDateTo(newEndDate);
+                    System.out.println("You have checked out of room " + roomNumber);
                 } else {
                     System.out.println("You cannot checkout this early.");
                 }
+            }
+        }
+        return falseID;
+    }
+
+    public void checkout(int roomNumber) {
+        Scanner sc = new Scanner(System.in);
+        boolean roomFound = false;
+        boolean falseID = false;
+        for (Room room : rooms) {
+            if (room.getRoom() == roomNumber) {
+                System.out.println("Type which reservation you want to checkout early: ");
+                String id = sc.nextLine();
+                int idReservation = Integer.parseInt(id);
+                falseID = daysToCheckout(room, idReservation, falseID, sc, roomNumber);
                 roomFound = true;
             }
+        }
+        if (!falseID){
+            System.out.println("There are no reservations with this id");
         }
         if (!roomFound) {
             System.out.println("Such room does not exist.");
         }
     }
 
-    public static void findVip(int beds, LocalDate from, LocalDate to, ArrayList<Room> rooms)
-    {
-        boolean available = availability(from,to,rooms);
-        ArrayList<Room> listOfRooms = new ArrayList<>();
-        if(!available) {
-            for(Room room : rooms) {
-                ArrayList<Reservations> listOfLists = room.getListOfLists();
-                if (listOfLists != null && !listOfLists.isEmpty()) {
-                    for (Reservations reservations : listOfLists) {
-                        //System.out.println("From: " + dates.getDate1() + ", To: " + dates.getDate2());
-                        if(from.compareTo(reservations.getDate1())>=0 && to.compareTo(reservations.getDate2())<=0) {
-                            if(room.getBeds() > room.getGuests()) {
-                                listOfRooms.add(room);
-                            }
+    public static void listOfRoomsWithMoreBedsThanGuests(ArrayList<Room> rooms,
+         ArrayList<Reservations> listOfReservations,ArrayList<Room> listOfRooms,LocalDate from, LocalDate to) {
+        for(Room room : rooms) {
+            ArrayList<Reservations> listOfLists = room.getListOfLists();
+            if (listOfLists != null && !listOfLists.isEmpty()) {
+                for (Reservations reservations : listOfLists) {
+                    if(from.compareTo(reservations.getDate1()) >= 0 && to.compareTo(reservations.getDate2()) <= 0) {
+                        if(room.getBeds() > reservations.getGuests()) {
+                            listOfRooms.add(room);
+                            listOfReservations.add(reservations);
                         }
                     }
                 }
             }
-            boolean moved = false;
-            for (Room room : listOfRooms) {
-                if (room.getBeds() >= beds) {
-                    for (Room otherRoom : listOfRooms) {
-                        if (otherRoom.getBeds() > room.getBeds() && otherRoom.getGuests() < otherRoom.getBeds()) {
-                            int availableSpace = otherRoom.getBeds() - otherRoom.getGuests();
-                            int guestsToMove = Math.min(availableSpace, room.getGuests());
-                            otherRoom.setGuests(otherRoom.getGuests() + guestsToMove);
-                            room.setGuests(room.getGuests() - guestsToMove);
+        }
+    }
+
+    /*public static boolean MovedGuests(ArrayList<Room> listOfRooms,ArrayList<Reservations> listOfReservations, int beds, boolean  moved){
+        /*for (Room room : listOfRooms) {
+            if (room.getBeds() >= beds) {
+                for (Room otherRoom : listOfRooms) {
+                    if (otherRoom.getBeds() > room.getBeds() && otherRoom.getGuests() < otherRoom.getBeds()) {
+                        int availableSpace = otherRoom.getBeds() - otherRoom.getGuests();
+                        int guestsToMove = Math.min(availableSpace, room.getGuests());
+                        otherRoom.setGuests(otherRoom.getGuests() + guestsToMove);
+                        room.setGuests(room.getGuests() - guestsToMove);
+                        moved = true;
+                        System.out.println("Moved " + guestsToMove + " guests from room " + room.getRoom() + " to room " + otherRoom.getRoom());
+                        return moved;
+                    }
+                }
+            }
+        }
+        for (int i=0; i<listOfRooms.size(); i++) {
+            if (listOfRooms.get(i).getBeds() >= beds) {
+                for (int j=0; j<listOfRooms.size(); j++) {
+                    if (listOfRooms.get(j).getBeds() > listOfRooms.get(i).getBeds() && listOfReservations.get(j).getGuests() < listOfRooms.get(j).getBeds()) {
+                        int availableSpace = listOfRooms.get(j).getBeds() - listOfReservations.get(j).getGuests();
+                        int guestsToMove = Math.min(availableSpace, listOfReservations.get(i).getGuests());
+                        listOfReservations.get(j).setGuests(listOfReservations.get(j).getGuests() + guestsToMove);
+                        listOfReservations.get(i).setGuests(listOfReservations.get(i).getGuests() - guestsToMove);
+                        moved = true;
+                        System.out.println("Moved " + guestsToMove + " guests from room " + listOfRooms.get(i).getRoom() + " to room " + listOfRooms.get(j).getRoom());
+                        return moved;
+                    }
+
+                }
+            }
+        }
+        return moved;
+    }*/
+    public static boolean MovedGuests(ArrayList<Room> listOfRooms, ArrayList<Reservations> listOfReservations, int beds, boolean moved) {
+        for (Reservations res : listOfReservations) {
+            Room room = getRoomByReservation(listOfRooms, res); // Retrieve the room for the current reservation
+            if (room.getBeds() >= beds && res.getGuests() > 0) {
+                for (Room otherRoom : listOfRooms) {
+                    for (Reservations otherRes : otherRoom.getListOfLists()) {
+                        if (otherRoom.getBeds() > room.getBeds() && otherRes.getGuests() < otherRoom.getBeds()) {
+                            int availableSpace = otherRoom.getBeds() - otherRes.getGuests();
+                            int guestsToMove = Math.min(availableSpace, res.getGuests());
+                            otherRes.setGuests(otherRes.getGuests() + guestsToMove);
+                            res.setGuests(res.getGuests() - guestsToMove);
+                            res.setGuests(beds);
                             moved = true;
                             System.out.println("Moved " + guestsToMove + " guests from room " + room.getRoom() + " to room " + otherRoom.getRoom());
+                            return moved;
                         }
                     }
                 }
             }
+        }
+        return moved;
+    }
+
+    public static Room getRoomByReservation(ArrayList<Room> rooms, Reservations res) {
+        for (Room room : rooms) {
+            if (room.getListOfLists().contains(res)) {
+                return room;
+            }
+        }
+        return null;
+    }
+
+    public void findVip(int beds, LocalDate from, LocalDate to) {
+        boolean available = availability(from,to);
+        ArrayList<Room> listOfRooms = new ArrayList<>();
+        ArrayList<Reservations> listOfReservations = new ArrayList<>();
+        if(!available) {
+            listOfRoomsWithMoreBedsThanGuests(rooms,listOfReservations,listOfRooms,from,to);
+            boolean moved = false;
+            moved = MovedGuests(listOfRooms,listOfReservations, beds, moved);
             if(!moved)
             {
                 System.out.println("There's nothing that can be done");
